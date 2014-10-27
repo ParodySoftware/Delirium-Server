@@ -7,14 +7,18 @@ import com.p.p.server.model.repository.RoleRepository;
 import com.p.p.server.model.repository.UserRepository;
 import com.p.p.server.util.DBUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.text.DateFormat;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 @Controller
@@ -30,6 +34,21 @@ public class UsersController {
 
     @Autowired
     DBUtils dbUtils;
+
+    @RequestMapping(value = {"/login"}, method = RequestMethod.GET)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.OK)
+    public HttpEntity<String> login() {
+        String csrf = UUID.randomUUID().toString();
+        String body =  "<html><body><form>" +
+                "Username: <input name='username' type='text'/><br/>" +
+                "Password: <input name='password' type='password'/><br/>" +
+                "<input type=\"hidden\" name=\"_csrf\" value=\"" +csrf+ "/> " +
+                "</form></body></html>";
+        MultiValueMap headers = new LinkedMultiValueMap();
+        headers.put("X-CSRF-TOKEN", csrf);
+        return new HttpEntity<>(body, headers);
+    }
 
     @RequestMapping(value = {"/user/{userId}"}, method = {RequestMethod.GET, RequestMethod.POST})
     @ResponseBody

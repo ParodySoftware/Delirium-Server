@@ -54,47 +54,89 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             @Override
             public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 
-                final String username = servletRequest.getParameter("username");
-                final String password = servletRequest.getParameter("username");
-                final String csrf = ((HttpServletRequest)servletRequest).getHeader("X-CSRF-TOKEN");
                 final String cookie = ((HttpServletRequest)servletRequest).getHeader("cookie");
 
-                SecurityContextHolder.getContext().setAuthentication(new Authentication() {
-                    @Override
-                    public Collection<? extends GrantedAuthority> getAuthorities() {
-                        return null;
-                    }
+                if (cookie == null) {
+                    final String username = servletRequest.getParameter("username");
+                    final String password = servletRequest.getParameter("username");
+                    String csrf = ((HttpServletRequest) servletRequest).getHeader("X-CSRF-TOKEN");
 
-                    @Override
-                    public Object getCredentials() {
-                        return null;
-                    }
+                    csrf = csrf != null ? csrf : servletRequest.getParameter("_csrf");
+                    SecurityContextHolder.getContext().setAuthentication(new Authentication() {
+                        @Override
+                        public Collection<? extends GrantedAuthority> getAuthorities() {
+                            return null;
+                        }
 
-                    @Override
-                    public Object getDetails() {
-                        return null;
-                    }
+                        @Override
+                        public Object getCredentials() {
+                            return null;
+                        }
 
-                    @Override
-                    public Object getPrincipal() {
-                        return new User("",username, "");
-                    }
+                        @Override
+                        public Object getDetails() {
+                            return null;
+                        }
 
-                    @Override
-                    public boolean isAuthenticated() {
-                        return true;
-                    }
+                        @Override
+                        public Object getPrincipal() {
+                            return new User("", username, "");
+                        }
 
-                    @Override
-                    public void setAuthenticated(boolean b) throws IllegalArgumentException {
+                        @Override
+                        public boolean isAuthenticated() {
+                            return true;
+                        }
 
-                    }
+                        @Override
+                        public void setAuthenticated(boolean b) throws IllegalArgumentException {
 
-                    @Override
-                    public String getName() {
-                        return username;
-                    }
-                });
+                        }
+
+                        @Override
+                        public String getName() {
+                            return username;
+                        }
+                    });
+                }else {
+                    SecurityContextHolder.getContext().setAuthentication(new Authentication() {
+                        // TODO: Create authenticated user authentication by reading data from DB
+                        @Override
+                        public Collection<? extends GrantedAuthority> getAuthorities() {
+                            return null;
+                        }
+
+                        @Override
+                        public Object getCredentials() {
+                            return null;
+                        }
+
+                        @Override
+                        public Object getDetails() {
+                            return null;
+                        }
+
+                        @Override
+                        public Object getPrincipal() {
+                            return null;
+                        }
+
+                        @Override
+                        public boolean isAuthenticated() {
+                            return false;
+                        }
+
+                        @Override
+                        public void setAuthenticated(boolean b) throws IllegalArgumentException {
+
+                        }
+
+                        @Override
+                        public String getName() {
+                            return null;
+                        }
+                    });
+                }
 
                 filterChain.doFilter(servletRequest, servletResponse);
             }
