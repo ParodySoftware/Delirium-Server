@@ -6,10 +6,7 @@ import org.hibernate.annotations.Cascade;
 import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "Postings")
@@ -30,9 +27,8 @@ public class Posting {
     @Cascade(value = {org.hibernate.annotations.CascadeType.ALL})
     private Set<Picture> pictures = new HashSet<>();
 
-    @CreatedDate
     @Column(nullable = false)
-    public Date created;
+    public Date created = Calendar.getInstance().getTime();
 
     public Date deleted;
 
