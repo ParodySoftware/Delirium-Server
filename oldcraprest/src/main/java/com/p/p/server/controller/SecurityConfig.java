@@ -4,6 +4,7 @@ package com.p.p.server.controller;
 import com.p.p.server.model.bean.User;
 import com.p.p.server.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -58,7 +59,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 if (cookie == null) {
                     final String username = servletRequest.getParameter("username");
-                    final String password = servletRequest.getParameter("username");
+                    final String password = servletRequest.getParameter("password");
                     String csrf = ((HttpServletRequest) servletRequest).getHeader("X-CSRF-TOKEN");
 
                     csrf = csrf != null ? csrf : servletRequest.getParameter("_csrf");
