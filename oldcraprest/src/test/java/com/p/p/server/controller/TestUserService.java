@@ -20,7 +20,7 @@ import java.net.URI;
 @ContextConfiguration(locations = "classpath:META-INF/spring/applicationContext.xml")
 public class TestUserService {
 
-    @Test
+    @Test @Ignore
     public void testGetUserInfo() {
         RestTemplate restTemplate = new RestTemplate();
 
