@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:META-INF/spring/applicationContext.xml")
-public class DbTest {
+public class DbTest extends AbstractTest {
 
     @Autowired
     UserRepository userRepository;
@@ -50,48 +50,22 @@ public class DbTest {
     @Autowired
     DBUtils dbUtils;
 
-    @Before
-    @Transactional(readOnly=false)
-    public void setup() throws IllegalAccessException, IOException, ClassNotFoundException {
-        //typesMap = getSQLToJavaTypesMap();
-        userRepository.deleteAll();
-        roleRepository.deleteAll();
-        postingRepository.deleteAll();
-        pictureRepository.deleteAll();
-        fillData();
-    }
-
-    @Transactional(readOnly=false)
-    private void fillData() {
-        List<User> userList = userRepository.findAll();
-
-        int initialCount = userList.size();
-
-        User user1 = new User("Mihail Nenov", "mihail.n@gmail.com", "pass");
-        User user2 = new User("Stancho Nenov", "stancho.n@gmail.com", "pass");
-        userRepository.save(user1);
-        userRepository.save(user2);
-
-        Role role = new Role("ADMIN");
-        role.getUsers().add(user1);
-        role.getUsers().add(user2);
-        roleRepository.save(role);
-
-        Posting posting1 = new Posting(user2, "TV for present - like brand new one!");
-        postingRepository.save(posting1);
-        Picture picture1 = new Picture(posting1, "Front view - really nice!");
-        pictureRepository.save(picture1);
-
-        userList = userRepository.findAll();
-        assertEquals(2, userList.size() - initialCount);
-    }
-
     @Transactional(readOnly = true)
     private void dumpDbObject(Object o) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setDateFormat(DateFormat.getDateTimeInstance());
         System.out.println("Found object: \n" + mapper.writerWithDefaultPrettyPrinter().writeValueAsString(o));
     }
+
+	@Test
+	public void testPostings() {
+
+		List<Posting> feed = dbUtils.getPostingsBefore(java.util.Calendar.getInstance().getTime(), 5);
+		assertEquals(2, feed.size());
+
+		feed = dbUtils.getPostingsBefore(java.util.Calendar.getInstance().getTime(), 1);
+		assertEquals(1, feed.size());
+	}
 
     @Test
     public void testNativeQuery() throws IOException, SQLException {
@@ -136,147 +110,4 @@ public class DbTest {
         ResultSet results = stmt.executeQuery();
         dbUtils.dumpStatementQuery(results);
     }
-//
-//    protected void dumpNativeQuery(String query) throws SQLException, IOException {
-//        Statement stmt = dataSource.getConnection().createStatement();
-//        ResultSet results = stmt.executeQuery(query);
-//        dumpStatementQuery(results);
-//    }
-//
-//    protected static void dumpStatementQuery(ResultSet results) throws SQLException {
-//        ResultSetMetaData metaData = results.getMetaData();
-//        String[] columns = extractColumnNames(metaData);
-//        List<Object[]> tableData = new ArrayList<>();
-//        while (results.next()) {
-//            Object[] values = new Object[columns.length];
-//            for (int i = 1; i <= columns.length; i++) {
-//                if (metaData.getColumnType(i) == -3) {
-//                    byte[] bytes = results.getBytes(i);
-//                    values[i - 1] = new String(bytes);
-//                } else {
-//                    System.out.println("SQL Type: " + metaData.getColumnType(i) + "; Java type: " + typesMap.get(metaData.getColumnType(i)));
-//                    values[i - 1] = results.getObject(i, typesMap.get(metaData.getColumnType(i)));
-//                }
-//            }
-//            tableData.add(values);
-//        }
-//        dumpTable(columns, tableData);
-//    }
-//
-//    private static String[] extractColumnNames(ResultSetMetaData metaData) throws SQLException {
-//        String[] names = new String[metaData.getColumnCount()];
-//        for (int i = 1; i <= names.length; i++) {
-//            names[i - 1] = metaData.getColumnName(i);
-//        }
-//        return names;
-//    }
-//
-//    private static void dumpTable(String[] header, List<Object[]> values) {
-//        int[] lengths = calculateLengths(header, values);
-//
-//        String headerLine = createValueLine(lengths, header);
-//
-//        StringBuilder newBuilder = new StringBuilder(fullLine(headerLine.length() - 2));
-//        newBuilder.append('\n').append(headerLine).append('\n').append(middleLine(lengths)).append('\n');
-//
-//        for (Object[] objects : values) {
-//            newBuilder.append(createValueLine(lengths, objects)).append('\n').append(middleLine(lengths)).append('\n');
-//        }
-//        System.out.println(newBuilder);
-//    }
-//
-//    private static String createValueLine(int[] lengths, Object[] values) {
-//        StringBuilder builder = new StringBuilder("|");
-//        for (int i = 0; i < lengths.length; i++) {
-//            String h = values[i] != null ? values[i].toString() : "";
-//            appendValue(builder, h, lengths[i]);
-//        }
-//        return builder.toString();
-//    }
-//
-//    private static void appendValue(StringBuilder builder, String h, int length) {
-//        builder.append(h);
-//        for (int j = 0; j < (length - h.length()); j++) {
-//            builder.append(" ");
-//        }
-//        builder.append("|");
-//    }
-//
-//    private static String fullLine(int length) {
-//        String result = "+";
-//        for (int i = 0; i < length; i++) {
-//            result += "-";
-//        }
-//        return result += "+";
-//    }
-//
-//    private static String middleLine(int[] lengths) {
-//        String result = "+";
-//        for (int i = 0; i < lengths.length; i++) {
-//            for (int j = 0; j < lengths[i]; j++) {
-//                result += "-";
-//            }
-//            result += "+";
-//        }
-//        return result;
-//    }
-//
-//    private static int[] calculateLengths(String[] header, List<Object[]> values) {
-//        int[] columnLengths = new int[header.length];
-//        for (int i = 0; i < header.length; i++) {
-//            int l = header[i].length();
-//            for (Object[] vs : values) {
-//                l = (vs[i] != null && l < vs[i].toString().length()) ? vs[i].toString().length() : l;
-//            }
-//            columnLengths[i] = l;
-//        }
-//        return columnLengths;
-//    }
-//
-//    private static Map<String, String> readCsvAsMap(String resource) throws IOException {
-//        assert resource != null;
-//
-//        String[] lines = FileCopyUtils.copyToString(
-//                new InputStreamReader(DbTest.class.getResourceAsStream(resource))).split("\\n");
-//
-//        Map<String, String> map = new HashMap<>(lines.length);
-//
-//        for (String l : lines) {
-//            String[] values = l.split(",");
-//            map.put(values[2], values[1]);
-//        }
-//
-//        return map;
-//    }
-//
-//    private static Map<Integer, String> getTypeCodes() throws IllegalAccessException {
-//        Field[] fields = java.sql.Types.class.getFields();
-//        Map<Integer, String> map = new HashMap<>(fields.length);
-//
-//        for (Field f : fields) {
-//            map.put(new Integer(f.getInt(null)), f.getName());
-//        }
-//
-//        return map;
-//    }
-//
-//    private static Map<Integer, Class<?>> getSQLToJavaTypesMap() throws IllegalAccessException, IOException, ClassNotFoundException {
-//        Map<String, String> dataTypesMap = readCsvAsMap("/data-mapping.csv");
-//        Map<Integer, String> typeCodes = getTypeCodes();
-//
-//        assert dataTypesMap != null && typeCodes != null;
-//
-//        Map<Integer, Class<?>> map = new HashMap<>(typeCodes.size());
-//
-//        for (Map.Entry<Integer, String> entry : typeCodes.entrySet()) {
-//            Integer code = entry.getKey();
-//            String typeName = entry.getValue();
-//
-//            if (dataTypesMap.keySet().contains(typeName)) {
-//                map.put(code, Class.forName(dataTypesMap.get(typeName)));
-//            }
-//        }
-//
-//        return map;
-//    }
 }

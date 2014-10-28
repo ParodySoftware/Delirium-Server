@@ -70,10 +70,15 @@ public class AbstractTest {
         role.getUsers().add(user2);
         roleRepository.save(role);
 
-        Posting posting1 = new Posting(user2, "TV for present - like brand new one!");
+        Posting posting1 = new Posting(user1, "TV for present - like brand new one!");
         postingRepository.save(posting1);
         Picture picture1 = new Picture(posting1, "Front view - really nice!");
         pictureRepository.save(picture1);
+
+		Posting posting2 = new Posting(user2, "TV for present - like brand new one!");
+		postingRepository.save(posting2);
+		Picture picture2 = new Picture(posting2, "Front view - really nice!");
+		pictureRepository.save(picture2);
 
         userList = userRepository.findAll();
         assertEquals(2, userList.size() - initialCount);
