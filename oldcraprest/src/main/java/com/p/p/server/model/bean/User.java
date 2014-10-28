@@ -7,6 +7,7 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Index;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.security.Principal;
 import java.util.Date;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @Table(name = "Users", uniqueConstraints = @UniqueConstraint(columnNames = {"mail"}))
 @JsonIdentityInfo(generator = ObjectIdGenerators.UUIDGenerator.class,
         property = "@id")
-public class User implements Principal {
+public class User implements Principal, Serializable {
 
     @Id
     @Column(name = "id")

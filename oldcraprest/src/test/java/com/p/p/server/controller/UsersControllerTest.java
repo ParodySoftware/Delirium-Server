@@ -1,6 +1,5 @@
 package com.p.p.server.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.p.p.server.model.bean.User;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,11 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 @RunWith(SpringJUnit4ClassRunner.class)

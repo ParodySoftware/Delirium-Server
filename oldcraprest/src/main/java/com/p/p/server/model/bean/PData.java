@@ -1,10 +1,11 @@
 package com.p.p.server.model.bean;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "pdata")
-public class PData {
+public class PData implements Serializable {
 
     @Id
     @GeneratedValue

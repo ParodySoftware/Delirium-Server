@@ -6,13 +6,14 @@ import org.hibernate.annotations.Cascade;
 import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.*;
 
 @Entity
 @Table(name = "Postings")
 @JsonIdentityInfo(generator = ObjectIdGenerators.UUIDGenerator.class,
         property = "@id")
-public class Posting {
+public class Posting implements Serializable {
 
     @Id
     private String id = UUID.randomUUID().toString();

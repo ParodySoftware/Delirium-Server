@@ -20,10 +20,10 @@ public class FeedController {
 	@RequestMapping(value = { "/feed" }, method = RequestMethod.GET)
 	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
-	public List<Posting> feed(@RequestParam(required = false) Date date, @RequestParam(required = false,
+	public List<Posting> feed(@RequestParam(required = false) Long time, @RequestParam(required = false,
 	  defaultValue = "128") Integer limit) {
 
-		date = date != null ? date : Calendar.getInstance().getTime();
+		Date date = time != null ? new Date(time) : Calendar.getInstance().getTime();
 
 		return dbUtils.getPostingsBefore(date, limit);
 	}

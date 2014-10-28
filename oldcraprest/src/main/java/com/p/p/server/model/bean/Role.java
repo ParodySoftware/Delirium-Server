@@ -7,6 +7,7 @@ import org.hibernate.annotations.Index;
 import org.springframework.security.core.GrantedAuthority;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Table(name = "Roles", uniqueConstraints = @UniqueConstraint(columnNames = {"name"}))
 @JsonIdentityInfo(generator = ObjectIdGenerators.UUIDGenerator.class,
         property = "@id")
-public class Role implements GrantedAuthority {
+public class Role implements GrantedAuthority, Serializable {
 
     /**
      * Needed for de-serialization

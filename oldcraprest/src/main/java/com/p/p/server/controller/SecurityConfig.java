@@ -2,16 +2,16 @@ package com.p.p.server.controller;
 
 
 import com.p.p.server.model.bean.User;
+import com.p.p.server.model.bean.UserSession;
+import com.p.p.server.model.repository.SessionRepository;
 import com.p.p.server.model.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -27,8 +27,10 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 
 @Configuration
 @EnableWebMvcSecurity
@@ -37,12 +39,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SessionRepository sessions;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().sessionManagement().sessionAuthenticationStrategy(new SessionAuthenticationStrategy() {
             @Override
             public void onAuthentication(Authentication authentication, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws SessionAuthenticationException {
-                authentication.isAuthenticated();
+                if (authentication.isAuthenticated()) {
+                    UserSession session = sessions.findOne(httpServletRequest.getHeader("Cookie"));
+                    if (session == null) {
+                        session = new UserSession();
+                        session.setUser((User)authentication.getPrincipal());
+                        session.setId(httpServletRequest.getHeader("Cookie"));
+                        session.setCreated(new Date());
+                        session.setCsrf(httpServletRequest.getHeader("X-CSRF-TOKEN"));
+                        session.setHost(""); // TODO: Set proper host
+                    }
+                }
             }
         });
         http.anonymous().disable();
@@ -55,88 +70,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             @Override
             public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 
-                final String cookie = ((HttpServletRequest)servletRequest).getHeader("cookie");
+                final String cookie = ((HttpServletRequest) servletRequest).getHeader("Cookie");
 
                 if (cookie == null) {
                     final String username = servletRequest.getParameter("username");
                     final String password = servletRequest.getParameter("password");
                     String csrf = ((HttpServletRequest) servletRequest).getHeader("X-CSRF-TOKEN");
-
                     csrf = csrf != null ? csrf : servletRequest.getParameter("_csrf");
-                    SecurityContextHolder.getContext().setAuthentication(new Authentication() {
-                        @Override
-                        public Collection<? extends GrantedAuthority> getAuthorities() {
-                            return null;
+
+                    if (username != null && password != null && csrf != null) {
+                        final User user = userRepository.getByMail(username);
+
+                        if (!user.getPassword().equals(password)) {
+                            throw new AccessDeniedException("Wrong credentials!");
                         }
 
-                        @Override
-                        public Object getCredentials() {
-                            return null;
-                        }
+                        SecurityContextHolder.getContext().setAuthentication(new UserAuthentication(user));
+                    } else {
+                        throw new UsernameNotFoundException("User not found! May be invalid session!");
+                    }
+                } else {
 
-                        @Override
-                        public Object getDetails() {
-                            return null;
-                        }
+                    final UserSession session = sessions.findOne(cookie);
 
-                        @Override
-                        public Object getPrincipal() {
-                            return new User("", username, "");
-                        }
-
-                        @Override
-                        public boolean isAuthenticated() {
-                            return true;
-                        }
-
-                        @Override
-                        public void setAuthenticated(boolean b) throws IllegalArgumentException {
-
-                        }
-
-                        @Override
-                        public String getName() {
-                            return username;
-                        }
-                    });
-                }else {
-                    SecurityContextHolder.getContext().setAuthentication(new Authentication() {
-                        // TODO: Create authenticated user authentication by reading data from DB
-                        @Override
-                        public Collection<? extends GrantedAuthority> getAuthorities() {
-                            return null;
-                        }
-
-                        @Override
-                        public Object getCredentials() {
-                            return null;
-                        }
-
-                        @Override
-                        public Object getDetails() {
-                            return null;
-                        }
-
-                        @Override
-                        public Object getPrincipal() {
-                            return null;
-                        }
-
-                        @Override
-                        public boolean isAuthenticated() {
-                            return false;
-                        }
-
-                        @Override
-                        public void setAuthenticated(boolean b) throws IllegalArgumentException {
-
-                        }
-
-                        @Override
-                        public String getName() {
-                            return null;
-                        }
-                    });
+                    if (session != null && session.getUser() != null) {
+                        SecurityContextHolder.getContext().setAuthentication(new UserAuthentication(session.getUser()));
+                    }
                 }
 
                 filterChain.doFilter(servletRequest, servletResponse);
@@ -149,106 +108,47 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         }, SessionManagementFilter.class);
     }
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(new CustomAuthenticationProvider()).userDetailsService(new UserDetailsService() {
-            @Override
-            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    protected class UserAuthentication implements Authentication {
 
-                final User user = userRepository.getByMail(username);
+        private final User user;
 
-                if (user != null) {
-                    return new UserDetails() {
-                        @Override
-                        public Collection<? extends GrantedAuthority> getAuthorities() {
-                            return user.getRoles();
-                        }
-
-                        @Override
-                        public String getPassword() {
-                            return user.getPassword();
-                        }
-
-                        @Override
-                        public String getUsername() {
-                            return user.getMail();
-                        }
-
-                        @Override
-                        public boolean isAccountNonExpired() {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean isAccountNonLocked() {
-                            return user.isEnabled();
-                        }
-
-                        @Override
-                        public boolean isCredentialsNonExpired() {
-                            return user.isEnabled();
-                        }
-
-                        @Override
-                        public boolean isEnabled() {
-                            return user.isEnabled();
-                        }
-                    };
-                } else {
-                    throw new UsernameNotFoundException(String.format("User not found: %s!", username));
-                }
-            }
-        });
-    }
-
-    private static class CustomAuthenticationProvider implements AuthenticationProvider {
-
-        @Override
-        public Authentication authenticate(final Authentication authentication) throws AuthenticationException {
-            return new Authentication() {
-
-                private boolean authenticated = true;
-
-                @Override
-                public Collection<? extends GrantedAuthority> getAuthorities() {
-                    return new ArrayList<>();
-                }
-
-                @Override
-                public Object getCredentials() {
-                    return new ArrayList<>();
-                }
-
-                @Override
-                public Object getDetails() {
-                    return new ArrayList<>();
-                }
-
-                @Override
-                public Object getPrincipal() {
-                    return new User();
-                }
-
-                @Override
-                public boolean isAuthenticated() {
-                    return false;
-                }
-
-                @Override
-                public void setAuthenticated(boolean b) throws IllegalArgumentException {
-                    this.authenticated = b;
-                }
-
-                @Override
-                public String getName() {
-                    return authentication.getName();
-                }
-            };
+        UserAuthentication(User user) {
+            this.user = user;
         }
 
         @Override
-        public boolean supports(Class<?> aClass) {
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return user.getRoles();
+        }
+
+        @Override
+        public Object getCredentials() {
+            return user.getRoles();
+        }
+
+        @Override
+        public Object getDetails() {
+            return user.getName();
+        }
+
+        @Override
+        public Object getPrincipal() {
+            return user;
+        }
+
+        @Override
+        public boolean isAuthenticated() {
             return true;
+        }
+
+        @Override
+        public void setAuthenticated(boolean b) throws IllegalArgumentException {
+
+        }
+
+        @Override
+        public String getName() {
+            return user.getMail();
         }
     }
 }

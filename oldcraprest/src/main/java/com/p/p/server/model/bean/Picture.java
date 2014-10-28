@@ -6,18 +6,19 @@ import com.p.p.server.model.repository.PDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
 @Table(name = "Pictures")
 @JsonIdentityInfo(generator = ObjectIdGenerators.UUIDGenerator.class,
         property = "@id")
-public class Picture {
+public class Picture implements Serializable {
 
     @Id
     private String id = UUID.randomUUID().toString();
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "POSTING_ID")
     private Posting posting;
 

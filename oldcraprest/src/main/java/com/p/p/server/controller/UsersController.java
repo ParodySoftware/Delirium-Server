@@ -40,7 +40,7 @@ public class UsersController {
     @ResponseStatus(HttpStatus.OK)
     public HttpEntity<String> login() {
         String csrf = UUID.randomUUID().toString();
-        String body =  "<html><body><form>" +
+        String body =  "<html><body><form method='POST'>" +
                 "Username: <input name='username' type='text'/><br/>" +
                 "Password: <input name='password' type='password'/><br/>" +
                 "<input type=\"hidden\" name=\"_csrf\" value=\"" +csrf+ "/> " +
@@ -48,6 +48,13 @@ public class UsersController {
         MultiValueMap headers = new LinkedMultiValueMap();
         headers.put("X-CSRF-TOKEN", csrf);
         return new HttpEntity<>(body, headers);
+    }
+
+    @RequestMapping(value = {"/login"}, method = RequestMethod.POST)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.OK)
+    public String login(String username, String password, String _csrf) {
+        return "User logged in!";
     }
 
     @RequestMapping(value = {"/user/{userId}"}, method = {RequestMethod.GET, RequestMethod.POST})
