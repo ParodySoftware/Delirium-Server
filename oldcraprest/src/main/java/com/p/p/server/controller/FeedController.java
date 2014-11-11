@@ -1,9 +1,14 @@
 package com.p.p.server.controller;
 
+import com.p.p.server.model.bean.Picture;
 import com.p.p.server.model.bean.Posting;
+import com.p.p.server.model.bean.User;
+import com.p.p.server.model.repository.PictureRepository;
+import com.p.p.server.model.repository.PostingRepository;
 import com.p.p.server.util.DBUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +22,12 @@ public class FeedController {
 	@Autowired
 	DBUtils dbUtils;
 
+	@Autowired
+	PostingRepository postingRepository;
+
+	@Autowired
+	PictureRepository pictureRepository;
+
 	@RequestMapping(value = { "/feed" }, method = RequestMethod.GET)
 	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
@@ -27,4 +38,15 @@ public class FeedController {
 
 		return dbUtils.getPostingsBefore(date, limit);
 	}
+
+	public void post(String text) {
+
+		Posting posting =
+		  new Posting((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal(), text);
+		postingRepository.save(posting);
+
+		Picture picture = new Picture(posting, "Front view - really nice!");
+		pictureRepository.save(picture);
+	}
+
 }

@@ -206,7 +206,7 @@ public class DBUtils {
 
 	public User createOrGetUser(String name, String mail, String pass, Role... roles) {
 
-		User user = userRepository.getByMail("mail");
+		User user = userRepository.getByMail(mail);
 
 		if (user == null) {
 			user = new User(name, mail, pass);

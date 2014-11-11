@@ -31,7 +31,7 @@ public class AuthenticationStrategy implements SessionAuthenticationStrategy {
             userSession.setUser((User)authentication.getPrincipal());
             userSession.setId(javaCookie.getValue());
             userSession.setCreated(new Date());
-            userSession.setCsrf(httpServletRequest.getHeader(SQLAuthenticationFilter.CSRF_TOKEN));
+            userSession.setCsrf(httpServletResponse.getHeader(SQLAuthenticationFilter.CSRF_TOKEN));
             userSession.setHost("");
             sessionRepository.save(userSession);
         }
