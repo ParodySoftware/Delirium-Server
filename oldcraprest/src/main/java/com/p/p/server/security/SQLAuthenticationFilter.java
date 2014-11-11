@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,21 +22,28 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
 
+@WebFilter
 public class SQLAuthenticationFilter extends org.springframework.web.filter.GenericFilterBean {
 
-	private static final String COOKIES_NAME = "JSESSIONID";
+	protected static final String COOKIES_NAME = "JSESSIONID-DELIRIUM";
 
-	@Autowired
-	UserRepository userRepository;
+    protected static final String CSRF_TOKEN = "X-CSRF-TOKEN";
 
-	@Autowired
-	SessionRepository sessionRepository;
+	final UserRepository userRepository;
+	final SessionRepository sessionRepository;
+
+    SQLAuthenticationFilter(UserRepository userRepository, SessionRepository sessionRepository) {
+        this.userRepository = userRepository;
+        this.sessionRepository = sessionRepository;
+    }
 
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain
 	  filterChain) throws IOException, ServletException {
 
-		final String cookie = ((HttpServletRequest) servletRequest).getHeader("Cookie");
+		final Cookie[] cookies = ((HttpServletRequest) servletRequest).getCookies();
+
+        Cookie cookie = findCookie(cookies);
 
 		if (cookie == null) {
 			final String username = servletRequest.getParameter("username");
@@ -50,25 +58,14 @@ public class SQLAuthenticationFilter extends org.springframework.web.filter.Gene
 					throw new AccessDeniedException("Wrong credentials!");
 				}
 
-
-				Cookie javaCookie = new Cookie("JSESSIONID", UUID.randomUUID().toString());
-				((HttpServletResponse)servletResponse).addCookie(javaCookie);
-
-				UserSession userSession = new UserSession();
-				userSession.setUser(user);
-				userSession.setId(javaCookie.getValue());
-				userSession.setCreated(new Date());
-				userSession.setCsrf(csrf);
-				userSession.setHost("");
-				sessionRepository.save(userSession);
-
-				servletRequest.getServletContext().setAttribute("authentication", new UserAuthentication(user));
+                ((HttpServletResponse)servletResponse).setHeader(CSRF_TOKEN, csrf);
+				SecurityContextHolder.getContext().setAuthentication(new UserAuthentication(user));
 			} else {
 				throw new UsernameNotFoundException("User not found! May be invalid cookie!");
 			}
 		} else {
 
-			final UserSession session = sessionRepository.findOne(cookie);
+			final UserSession session = sessionRepository.findOne(cookie.getValue());
 
 			if (session != null && session.getUser() != null) {
 				SecurityContextHolder.getContext().setAuthentication(new UserAuthentication(session.getUser()));
@@ -78,47 +75,14 @@ public class SQLAuthenticationFilter extends org.springframework.web.filter.Gene
 		filterChain.doFilter(servletRequest, servletResponse);
 	}
 
-	protected class UserAuthentication implements Authentication {
-
-		private final User user;
-
-		UserAuthentication(User user) {
-			this.user = user;
-		}
-
-		@Override
-		public Collection<? extends GrantedAuthority> getAuthorities() {
-			return user.getRoles();
-		}
-
-		@Override
-		public Object getCredentials() {
-			return user.getRoles();
-		}
-
-		@Override
-		public Object getDetails() {
-			return user.getName();
-		}
-
-		@Override
-		public Object getPrincipal() {
-			return user;
-		}
-
-		@Override
-		public boolean isAuthenticated() {
-			return true;
-		}
-
-		@Override
-		public void setAuthenticated(boolean b) throws IllegalArgumentException {
-
-		}
-
-		@Override
-		public String getName() {
-			return user.getMail();
-		}
-	}
+    public static Cookie findCookie(Cookie[] cookies) {
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if (COOKIES_NAME.equals(c.getName())) {
+                    return c;
+                }
+            }
+        }
+        return null;
+    }
 }

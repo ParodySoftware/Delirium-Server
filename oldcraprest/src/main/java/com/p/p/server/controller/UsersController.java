@@ -3,8 +3,11 @@ package com.p.p.server.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.p.p.server.model.bean.Role;
 import com.p.p.server.model.bean.User;
+import com.p.p.server.model.bean.UserSession;
 import com.p.p.server.model.repository.RoleRepository;
+import com.p.p.server.model.repository.SessionRepository;
 import com.p.p.server.model.repository.UserRepository;
+import com.p.p.server.security.SQLAuthenticationFilter;
 import com.p.p.server.util.DBUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -17,6 +20,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import java.text.DateFormat;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -31,6 +36,9 @@ public class UsersController {
 
     @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    SessionRepository sessionRepository;
 
     @Autowired
     DBUtils dbUtils;
@@ -54,7 +62,8 @@ public class UsersController {
     @ResponseBody
     @ResponseStatus(HttpStatus.OK)
     public String login(String username, String password, String _csrf) {
-        return "User logged in!";
+        User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return String.format("User %s logged in!", user.getName());
     }
 
     @RequestMapping(value = {"/user/{userId}"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -70,6 +79,18 @@ public class UsersController {
     public User userInfo() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         return findUser(name);
+    }
+
+    @RequestMapping(value = {"/logout"}, method = {RequestMethod.POST, RequestMethod.POST})
+    @ResponseBody
+    @ResponseStatus(HttpStatus.OK)
+    public String logout(HttpServletRequest request, String _csrf) {
+        Cookie cookie = SQLAuthenticationFilter.findCookie(request.getCookies());
+        UserSession session = sessionRepository.findOne(cookie.getValue());
+        if (session != null) {
+            sessionRepository.delete(session);
+        }
+        return String.format("User %s logged out!", session.getUser().getName());
     }
 
     @PostConstruct

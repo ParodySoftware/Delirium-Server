@@ -13,6 +13,6 @@
     <!-- Allows for mapping the DispatcherServlet to "/" by forwarding static resource requests to the container's default Servlet -->
     <mvc:default-servlet-handler/>
 
-    <context:component-scan base-package="com.p.p.server.controller"/>
+    <context:component-scan base-package="com.p.p.server"/>
 
 </beans>
