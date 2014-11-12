@@ -12,6 +12,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Collection;
 
+import static org.junit.Assert.assertNotNull;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:META-INF/spring/applicationContext.xml")
 public class UsersControllerTest extends AbstractTest {
@@ -69,5 +71,7 @@ public class UsersControllerTest extends AbstractTest {
         });
 
         User user = controller.userInfo();
+
+		assertNotNull(user);
     }
 }
