@@ -3,41 +3,88 @@ package com.p.p.server.security;
 import com.p.p.server.model.bean.User;
 import com.p.p.server.model.bean.UserSession;
 import com.p.p.server.model.repository.SessionRepository;
+import com.p.p.server.model.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.session.SessionAuthenticationException;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
-import java.util.UUID;
 
-public class AuthenticationStrategy implements SessionAuthenticationStrategy {
+public class AuthenticationStrategy {
 
-	private final SessionRepository sessionRepository;
+	private final SessionRepository sessions;
+	private final UserRepository users;
 
-	AuthenticationStrategy(SessionRepository sessionRepository) {
-		this.sessionRepository = sessionRepository;
+	public AuthenticationStrategy(SessionRepository sessions, UserRepository users) {
+		this.sessions = sessions;
+		this.users = users;
 	}
 
-	@Override
-	public void onAuthentication(Authentication authentication, HttpServletRequest httpServletRequest,
-	  HttpServletResponse httpServletResponse) throws SessionAuthenticationException {
+	public Authentication authenticate(HttpServletRequest request, HttpServletResponse response) {
 
-		if (authentication.isAuthenticated() && authentication.getPrincipal() != null && authentication
-		  .getPrincipal() instanceof User) {
+		Cookie cookie = findCookie(request.getCookies());
 
-			Cookie javaCookie = new Cookie(SQLAuthenticationFilter.COOKIES_NAME, UUID.randomUUID().toString());
-			httpServletResponse.addCookie(javaCookie);
+		if (cookie == null || sessions.findOne(cookie.getValue()) == null) {
+			final String username = request.getParameter("username");
+			final String password = request.getParameter("password");
+			String csrf = request.getHeader("X-CSRF-TOKEN");
+			csrf = csrf != null ? csrf : request.getParameter("_csrf");
 
-			UserSession userSession = new UserSession();
-			userSession.setUser((User) authentication.getPrincipal());
-			userSession.setId(javaCookie.getValue());
-			userSession.setCreated(new Date());
-			userSession.setCsrf(httpServletResponse.getHeader(SQLAuthenticationFilter.CSRF_TOKEN));
-			userSession.setHost("");
-			sessionRepository.save(userSession);
+			if (username != null && password != null && csrf != null && request.getMethod().equals("POST")) {
+				final User user = users.getByMail(username);
+
+				// Check user password
+				if (!user.getPassword().equals(password)) {
+					throw new AccessDeniedException("Wrong credentials!");
+				}
+
+				return new UserAuthentication(user);
+
+			} else if (request.getServletPath().endsWith("user/login")) {
+				return null;
+			} else {
+				throw new UsernameNotFoundException("User not found!");
+			}
+		} else {
+
+			final UserSession session = sessions.findOne(cookie.getValue());
+
+			if (session != null && session.getUser() != null) {
+
+				if (!request.getServletPath().endsWith("user/logout")) {
+
+					// Logout the currently logged user
+					Authentication authentication = new UserAuthentication(session.getUser());
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+					return authentication;
+				} else {
+					sessions.delete(session);
+					return null;
+				}
+			} else {
+				// Try to invalidate and delete the session and the cookie
+				Cookie javaCookie = new Cookie(CustomAuthenticationFilter.COOKIES_NAME, cookie.getValue());
+				javaCookie.setMaxAge(1);
+				response.addCookie(javaCookie);
+				if (session != null) {
+					sessions.delete(session);
+				}
+				throw new UsernameNotFoundException("Session not found!");
+			}
 		}
+	}
+
+	protected static Cookie findCookie(Cookie[] cookies) {
+		if (cookies != null) {
+			for (Cookie c : cookies) {
+				if (CustomAuthenticationFilter.COOKIES_NAME.equals(c.getName())) {
+					return c;
+				}
+			}
+		}
+		return null;
 	}
 }

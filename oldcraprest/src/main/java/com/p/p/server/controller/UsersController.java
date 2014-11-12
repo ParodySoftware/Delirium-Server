@@ -7,15 +7,13 @@ import com.p.p.server.model.bean.UserSession;
 import com.p.p.server.model.repository.RoleRepository;
 import com.p.p.server.model.repository.SessionRepository;
 import com.p.p.server.model.repository.UserRepository;
-import com.p.p.server.security.SQLAuthenticationFilter;
+import com.p.p.server.security.CustomAuthenticationFilter;
 import com.p.p.server.util.DBUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.bind.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -99,17 +97,7 @@ public class UsersController {
 	@ResponseStatus(HttpStatus.OK)
 	public String logout(HttpServletRequest request, String csrf) {
 
-		Cookie cookie = SQLAuthenticationFilter.findCookie(request.getCookies());
-
-		UserSession session = sessionRepository.findOne(cookie.getValue());
-
-		if (session != null && session.getUser()
-		  .equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal()) && session.getCsrf()
-		  .equals(csrf)) {
-
-			sessionRepository.delete(session);
-		}
-		return String.format("User %s logged out!", session.getUser().getName());
+		return String.format("User logged out!");
 	}
 
 	@RequestMapping(value = { "/add" }, method = { RequestMethod.POST, RequestMethod.GET })
