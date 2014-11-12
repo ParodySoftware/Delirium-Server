@@ -45,8 +45,12 @@ public class FeedController {
 		  new Posting((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal(), text);
 		postingRepository.save(posting);
 
-		Picture picture = new Picture(posting, "Front view - really nice!");
+		Picture picture = new Picture(posting, text);
 		pictureRepository.save(picture);
+
+		posting.getPictures().add(picture);
+
+		postingRepository.save(posting);
 	}
 
 }
