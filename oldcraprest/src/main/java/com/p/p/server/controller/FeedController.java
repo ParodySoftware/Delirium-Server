@@ -39,6 +39,10 @@ public class FeedController {
 		return dbUtils.getPostingsBefore(date, limit);
 	}
 
+
+	@RequestMapping(value = { "/post" }, method = RequestMethod.POST)
+	@ResponseBody
+	@ResponseStatus(HttpStatus.OK)
 	public void post(String text) {
 
 		Posting posting =
