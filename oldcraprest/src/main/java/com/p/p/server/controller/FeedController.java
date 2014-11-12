@@ -16,7 +16,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-@Controller
+@RestController
+@RequestMapping(value = { "/user" })
 public class FeedController {
 
 	@Autowired
@@ -29,7 +30,6 @@ public class FeedController {
 	PictureRepository pictureRepository;
 
 	@RequestMapping(value = { "/feed" }, method = RequestMethod.GET)
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	public List<Posting> feed(@RequestParam(required = false) Long time, @RequestParam(required = false,
 	  defaultValue = "128") Integer limit) {
@@ -41,7 +41,6 @@ public class FeedController {
 
 
 	@RequestMapping(value = { "/post" }, method = RequestMethod.POST)
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	public void post(String text) {
 

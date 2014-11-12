@@ -79,10 +79,16 @@ public class UsersController {
 		return String.format("User %s logged in!", user.getName());
 	}
 
-	@RequestMapping(value = { "/{userId}" }, method = { RequestMethod.GET, RequestMethod.POST })
+	@RequestMapping(value = { "/info/{userId}" }, method = { RequestMethod.GET, RequestMethod.POST })
 	@ResponseStatus(HttpStatus.OK)
 	public User userInfo(@PathVariable String userId) {
 		return findUser(userId);
+	}
+
+	@RequestMapping(value = { "/delete/{userId}" }, method = { RequestMethod.GET, RequestMethod.POST })
+	@ResponseStatus(HttpStatus.OK)
+	public void userDelete(@PathVariable String userId) {
+		userRepository.delete(findUser(userId));
 	}
 
 	@RequestMapping(value = { "/info" }, method = { RequestMethod.GET, RequestMethod.POST })

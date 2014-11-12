@@ -32,6 +32,7 @@ public class SessionCreationStrategy {
 			if (cookie == null || sessionRepository.findOne(cookie.getValue()) == null) {
 
 				Cookie javaCookie = new Cookie(CustomAuthenticationFilter.COOKIES_NAME, UUID.randomUUID().toString());
+				//javaCookie.setDomain(request.getRemoteHost());
 				response.addCookie(javaCookie);
 
 				UserSession userSession = new UserSession();
@@ -43,7 +44,7 @@ public class SessionCreationStrategy {
 				csrf = csrf != null ? csrf : request.getParameter("_csrf");
 				userSession.setCsrf(csrf);
 
-				userSession.setHost(request.getRemoteHost());
+				userSession.setHost("");
 
 				sessionRepository.save(userSession);
 			}
