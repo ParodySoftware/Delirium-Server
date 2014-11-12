@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-@Controller
+@RestController
 @RequestMapping(value = "/user")
 public class UsersController {
 
@@ -48,17 +48,23 @@ public class UsersController {
 	DBUtils dbUtils;
 
 	@RequestMapping(value = { "/login" }, method = RequestMethod.GET)
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	public HttpEntity<String> login() {
 
 		String csrf = UUID.randomUUID().toString();
 
-		String body = "<html><body><form method='POST'>" +
-		  "Username: <input name='username' type='text'/><br/>" +
-		  "Password: <input name='password' type='password'/><br/>" +
-		  "<input type=\"hidden\" name=\"_csrf\" value=\"" + csrf + "> <br/> " +
-		  "<input type=\"submit\" title=\"Login\" value=\"s\" ></form></body></html>";
+		String body = "<html><body><form method='POST'>\n"
+		  + "<label>Username:</label>\n"
+		  + "<input name='username' type='text'>\n"
+		  + "<br/>\n"
+		  + "<label>Password:</label>\n"
+		  + "<input name='password' type='password'><br/>\n"
+		  + "<input type=\"hidden\" name=\"_csrf\" value=\"735d21d8-062d-4e02-b170-761d0df81e9a\">\n"
+		  + "<br/>\n"
+		  + "<input type=\"submit\" title=\"login\" value=\"Login\">\n"
+		  + "</form>\n"
+		  + "</body>\n"
+		  + "</html>\n";
 
 		MultiValueMap headers = new LinkedMultiValueMap();
 		List list = new ArrayList<>();
@@ -69,7 +75,6 @@ public class UsersController {
 	}
 
 	@RequestMapping(value = { "/login" }, method = RequestMethod.POST)
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	public String login(String username, String password, String _csrf) {
 		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -77,14 +82,12 @@ public class UsersController {
 	}
 
 	@RequestMapping(value = { "/{userId}" }, method = { RequestMethod.GET, RequestMethod.POST })
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	public User userInfo(@PathVariable String userId) {
 		return findUser(userId);
 	}
 
 	@RequestMapping(value = { "/info" }, method = { RequestMethod.GET, RequestMethod.POST })
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	@Secured({"ROLE_ADMIN", "ROLE_USER"})
 	public User userInfo() {
@@ -93,7 +96,6 @@ public class UsersController {
 	}
 
 	@RequestMapping(value = { "/logout" }, method = { RequestMethod.POST, RequestMethod.GET })
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	public String logout(HttpServletRequest request, String csrf) {
 
@@ -111,10 +113,8 @@ public class UsersController {
 	}
 
 	@RequestMapping(value = { "/add" }, method = { RequestMethod.POST, RequestMethod.GET })
-	@ResponseBody
 	@ResponseStatus(HttpStatus.OK)
 	public void addUser(String name, String mail, String pass) {
-
 		dbUtils.createOrGetUser(name, mail, pass, dbUtils.createOrGetRole("USER"));
 	}
 
