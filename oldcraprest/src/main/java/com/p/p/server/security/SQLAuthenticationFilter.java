@@ -58,9 +58,11 @@ public class SQLAuthenticationFilter extends org.springframework.web.filter.Gene
 					throw new AccessDeniedException("Wrong credentials!");
 				}
 
-                ((HttpServletResponse)servletResponse).setHeader(CSRF_TOKEN, csrf);
+				((HttpServletResponse) servletResponse).setHeader(CSRF_TOKEN, csrf);
 				SecurityContextHolder.getContext().setAuthentication(new UserAuthentication(user));
-			} else {
+			} else if (((HttpServletRequest) servletRequest).getServletPath().endsWith("user/login")) {
+				SecurityContextHolder.getContext().setAuthentication(new UserAuthentication(null));
+			}  else {
 				throw new UsernameNotFoundException("User not found! May be invalid cookie!");
 			}
 		} else {

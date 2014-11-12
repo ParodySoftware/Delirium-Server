@@ -15,25 +15,29 @@ import java.util.UUID;
 
 public class AuthenticationStrategy implements SessionAuthenticationStrategy {
 
-    private final SessionRepository sessionRepository;
+	private final SessionRepository sessionRepository;
 
-    AuthenticationStrategy(SessionRepository sessionRepository) {
-        this.sessionRepository = sessionRepository;
-    }
+	AuthenticationStrategy(SessionRepository sessionRepository) {
+		this.sessionRepository = sessionRepository;
+	}
 
-    @Override
-    public void onAuthentication(Authentication authentication, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws SessionAuthenticationException {
-        if (authentication.isAuthenticated()) {
-            Cookie javaCookie = new Cookie(SQLAuthenticationFilter.COOKIES_NAME, UUID.randomUUID().toString());
-            httpServletResponse.addCookie(javaCookie);
+	@Override
+	public void onAuthentication(Authentication authentication, HttpServletRequest httpServletRequest,
+	  HttpServletResponse httpServletResponse) throws SessionAuthenticationException {
 
-            UserSession userSession = new UserSession();
-            userSession.setUser((User)authentication.getPrincipal());
-            userSession.setId(javaCookie.getValue());
-            userSession.setCreated(new Date());
-            userSession.setCsrf(httpServletResponse.getHeader(SQLAuthenticationFilter.CSRF_TOKEN));
-            userSession.setHost("");
-            sessionRepository.save(userSession);
-        }
-    }
+		if (authentication.isAuthenticated() && authentication.getPrincipal() != null && authentication
+		  .getPrincipal() instanceof User) {
+
+			Cookie javaCookie = new Cookie(SQLAuthenticationFilter.COOKIES_NAME, UUID.randomUUID().toString());
+			httpServletResponse.addCookie(javaCookie);
+
+			UserSession userSession = new UserSession();
+			userSession.setUser((User) authentication.getPrincipal());
+			userSession.setId(javaCookie.getValue());
+			userSession.setCreated(new Date());
+			userSession.setCsrf(httpServletResponse.getHeader(SQLAuthenticationFilter.CSRF_TOKEN));
+			userSession.setHost("");
+			sessionRepository.save(userSession);
+		}
+	}
 }
