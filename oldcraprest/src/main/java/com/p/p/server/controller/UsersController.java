@@ -47,17 +47,17 @@ public class UsersController {
 
 	@RequestMapping(value = { "/login" }, method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
-	public HttpEntity<String> login() {
+	public HttpEntity<String> login(HttpServletRequest request) {
 
 		String csrf = UUID.randomUUID().toString();
-
+        request.getSession().setAttribute("csrf", csrf);
 		String body = "<html><body><form method='POST'>\n"
 		  + "<label>Username:</label>\n"
 		  + "<input name='username' type='text'>\n"
 		  + "<br/>\n"
 		  + "<label>Password:</label>\n"
 		  + "<input name='password' type='password'><br/>\n"
-		  + "<input type=\"hidden\" name=\"_csrf\" value=\"735d21d8-062d-4e02-b170-761d0df81e9a\">\n"
+		  + "<input type=\"hidden\" name=\"_csrf\" value=\"" + csrf + "\">\n"
 		  + "<br/>\n"
 		  + "<input type=\"submit\" title=\"login\" value=\"Login\">\n"
 		  + "</form>\n"
@@ -65,22 +65,24 @@ public class UsersController {
 		  + "</html>\n";
 
 		MultiValueMap headers = new LinkedMultiValueMap();
-		List list = new ArrayList<>();
+		List<String> list = new ArrayList<>();
 		list.add(csrf);
-		headers.put("X-CSRF-TOKEN", list);
+		headers.put(CustomAuthenticationFilter.CSRF_TOKEN, list);
 
 		return new HttpEntity<>(body, headers);
 	}
 
-	@RequestMapping(value = { "/login" }, method = RequestMethod.POST)
+	@RequestMapping(value = { "/login" }, method = RequestMethod.POST)  
 	@ResponseStatus(HttpStatus.OK)
-	public String login(String username, String password, String _csrf) {
+	public String login(HttpServletRequest request, String username, String password, String _csrf) {
 		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        request.getSession().setAttribute("csrf", _csrf);
 		return String.format("User %s logged in!", user.getName());
 	}
 
 	@RequestMapping(value = { "/info/{userId}" }, method = { RequestMethod.GET, RequestMethod.POST })
 	@ResponseStatus(HttpStatus.OK)
+    @Secured({"ROLE_ADMIN"})
 	public User userInfo(@PathVariable String userId) {
 		return findUser(userId);
 	}

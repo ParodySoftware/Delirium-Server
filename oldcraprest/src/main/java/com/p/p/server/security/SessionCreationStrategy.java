@@ -32,7 +32,8 @@ public class SessionCreationStrategy {
 			if (cookie == null || sessionRepository.findOne(cookie.getValue()) == null) {
 
 				Cookie javaCookie = new Cookie(CustomAuthenticationFilter.COOKIES_NAME, UUID.randomUUID().toString());
-				//javaCookie.setDomain(request.getRemoteHost());
+				javaCookie.setPath("/oldcrap-rest/");
+                javaCookie.setHttpOnly(true);
 				response.addCookie(javaCookie);
 
 				UserSession userSession = new UserSession();
@@ -40,9 +41,7 @@ public class SessionCreationStrategy {
 				userSession.setId(javaCookie.getValue());
 				userSession.setCreated(new Date());
 
-				String csrf = request.getHeader("X-CSRF-TOKEN");
-				csrf = csrf != null ? csrf : request.getParameter("_csrf");
-				userSession.setCsrf(csrf);
+				userSession.setCsrf((String)request.getSession().getAttribute("csrf"));
 
 				userSession.setHost("");
 

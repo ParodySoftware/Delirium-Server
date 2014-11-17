@@ -16,9 +16,9 @@ import java.io.IOException;
 @WebFilter
 public class CustomAuthenticationFilter extends org.springframework.web.filter.GenericFilterBean {
 
-	protected static final String COOKIES_NAME = "JSESSIONID-DELIRIUM";
+	public static final String COOKIES_NAME = "JSESSIONID-DELIRIUM";
 
-	protected static final String CSRF_TOKEN = "X-CSRF-TOKEN";
+	public static final String CSRF_TOKEN = "X-CSRF-TOKEN";
 
 	private final AuthenticationStrategy authenticationStrategy;
 	private final SessionCreationStrategy sessionCreationStrategy;
