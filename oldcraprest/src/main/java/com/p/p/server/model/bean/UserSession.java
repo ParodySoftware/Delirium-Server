@@ -11,7 +11,7 @@ public class UserSession implements Serializable {
     @Id
     String id;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REFRESH)
     @JoinColumn(name = "userId")
     User user;
 

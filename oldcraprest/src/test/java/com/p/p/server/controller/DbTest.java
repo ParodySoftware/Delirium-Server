@@ -101,7 +101,6 @@ public class DbTest extends AbstractTest {
     }
 
     @Test
-    @Ignore
     public void testPreparedStatement() throws SQLException {
         PreparedStatement stmt = dataSource.getConnection().prepareStatement("select u.mail as username, r.name as authority from USERS u, ROLES r, USER_ROLES ur "
                 + "where ur.role_id = r.id and ur.user_id = u.id and u.mail=?");

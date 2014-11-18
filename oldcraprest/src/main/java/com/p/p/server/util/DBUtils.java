@@ -1,6 +1,8 @@
 package com.p.p.server.util;
 
 import com.p.p.server.model.bean.Posting;
+import com.p.p.server.model.bean.Role;
+import com.p.p.server.model.bean.User;
 import com.p.p.server.model.repository.PictureRepository;
 import com.p.p.server.model.repository.PostingRepository;
 import com.p.p.server.model.repository.RoleRepository;
@@ -200,6 +202,46 @@ public class DBUtils {
 		}
 
 		return map;
+	}
+
+	public User createOrGetUser(String name, String mail, String pass, Role... roles) {
+
+		User user = userRepository.getByMail(mail);
+
+		if (user == null) {
+			user = new User(name, mail, pass);
+			userRepository.save(user);
+
+			if (roles != null && roles.length >0) {
+				for (Role r : roles) {
+					user.getRoles().add(r);
+				}
+			}
+
+			userRepository.save(user);
+		}
+
+		return user;
+	}
+
+	public Role createOrGetRole(String name, User... users) {
+
+		Role role = roleRepository.findOne(name);
+
+		if (role == null) {
+			role = new Role(name);
+			roleRepository.save(role);
+
+			if (users != null && users.length >0) {
+				for (User u : users) {
+					role.getUsers().add(u);
+				}
+			}
+
+			roleRepository.save(role);
+		}
+
+		return role;
 	}
 
 	public void setDataSource(DataSource dataSource) {

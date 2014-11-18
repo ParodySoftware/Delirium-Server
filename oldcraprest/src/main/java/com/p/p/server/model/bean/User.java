@@ -161,4 +161,14 @@ public class User implements Principal, Serializable {
     public void setPostings(Set<Posting> postings) {
         this.postings = postings;
     }
+
+	@Override
+	public boolean equals(Object o) {
+		return o == this || (o instanceof User && ((User)o).getMail().equals(getMail()));
+	}
+
+	@Override
+	public int hashCode() {
+		return getMail().hashCode();
+	}
 }

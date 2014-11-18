@@ -1,6 +1,7 @@
 package com.p.p.server.model.bean;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.hibernate.annotations.Index;
@@ -74,7 +75,8 @@ public class Role implements GrantedAuthority, Serializable {
 
     @Override
     @Transient
+    @JsonIgnore
     public String getAuthority() {
-        return getName();
+        return "ROLE_" + getName();
     }
 }
