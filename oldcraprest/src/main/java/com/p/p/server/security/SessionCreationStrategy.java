@@ -5,7 +5,6 @@ import com.p.p.server.model.bean.UserSession;
 import com.p.p.server.model.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +19,6 @@ public class SessionCreationStrategy {
 
     @Autowired
 	private SessionRepository sessionRepository;
-
-//	public SessionCreationStrategy(SessionRepository sessionRepository) {
-//		this.sessionRepository = sessionRepository;
-//	}
 
 	public void createSession(Authentication authentication, HttpServletRequest request,
 	  HttpServletResponse response) throws SessionAuthenticationException {
