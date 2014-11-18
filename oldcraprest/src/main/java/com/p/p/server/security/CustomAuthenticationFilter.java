@@ -31,11 +31,6 @@ public class CustomAuthenticationFilter extends org.springframework.web.filter.G
     @Autowired
     private SessionCreationStrategy sessionCreationStrategy;
 
-//    public CustomAuthenticationFilter(UserRepository userRepository, SessionRepository sessionRepository) {
-//        //this.sessionCreationStrategy = new SessionCreationStrategy(sessionRepository);
-//        //this.authenticationStrategy = new AuthenticationStrategy(sessionRepository, userRepository);
-//    }
-
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain
             filterChain) throws IOException, ServletException {
