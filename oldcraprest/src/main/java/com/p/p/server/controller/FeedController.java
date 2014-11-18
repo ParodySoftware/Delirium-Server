@@ -10,6 +10,7 @@ import com.p.p.server.model.repository.PostingRepository;
 import com.p.p.server.util.DBUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +37,7 @@ public class FeedController {
 
     @RequestMapping(value = {"/feed"}, method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
+    @Secured({"ROLE_ADMIN", "ROLE_USER"})
     public List<Posting> feed(@RequestParam(required = false) Long time, @RequestParam(required = false,
             defaultValue = "128") Integer limit) {
 
@@ -47,6 +49,7 @@ public class FeedController {
 
     @RequestMapping(value = {"/post"}, method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
+    @Secured({"ROLE_ADMIN", "ROLE_USER"})
     public void post(String text) {
 
         Posting posting =
@@ -66,6 +69,7 @@ public class FeedController {
      */
     @RequestMapping(value = "/uploadMultipleFile", method = {RequestMethod.POST, RequestMethod.PUT})
     @ResponseStatus(HttpStatus.OK)
+    @Secured({"ROLE_ADMIN", "ROLE_USER"})
     public void uploadMultipleFileHandler(@RequestParam("posting") String postingId,
                                           @RequestParam(value = "name", required = false) String[] names,
                                           @RequestParam("file") MultipartFile[] files,

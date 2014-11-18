@@ -20,9 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.DateFormat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:META-INF/spring/applicationContext.xml")
@@ -35,14 +33,14 @@ public class TestUserService {
     }};
 
     @Test
-    @Ignore
+    //@Ignore
     public void testUserLogin() {
-        userLogin("mail","passs");
+        userLogin("mail","pass");
     }
 
     @Test
-    @Ignore
-    public void testUserInfo() throws IOException {
+    //@Ignore
+    public void testUserInfoIfAdmin() throws IOException {
 
         String sessionCookie = userLogin("mail", "pass");
 
@@ -61,6 +59,53 @@ public class TestUserService {
         assertEquals("mail", user.getMail());
 
         objectMapper.writerWithDefaultPrettyPrinter().writeValue(System.out, user);
+
+        responseJSON = restTemplate.exchange(
+                "http://localhost:8080/oldcrap-rest/user/info/olio",
+                HttpMethod.POST,
+                requestEntity,
+                String.class);
+
+        user = objectMapper.readValue(responseJSON.getBody(), User.class);
+
+        assertEquals("olio", user.getMail());
+
+        objectMapper.writerWithDefaultPrettyPrinter().writeValue(System.out, user);
+    }
+
+    @Test
+    //@Ignore
+    public void testUserInfoIfUser() throws IOException {
+
+        String sessionCookie = userLogin("olio", "olio");
+
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.add("Cookie", sessionCookie);
+
+        HttpEntity<MultiValueMap<String,String>> requestEntity = new HttpEntity<>(null, requestHeaders);
+        ResponseEntity<String> responseJSON = restTemplate.exchange(
+                "http://localhost:8080/oldcrap-rest/user/info",
+                HttpMethod.POST,
+                requestEntity,
+                String.class);
+
+        User user = objectMapper.readValue(responseJSON.getBody(), User.class);
+
+        assertEquals("olio", user.getMail());
+
+        objectMapper.writerWithDefaultPrettyPrinter().writeValue(System.out, user);
+
+        try {
+            responseJSON = restTemplate.exchange(
+                    "http://localhost:8080/oldcrap-rest/user/info/olio",
+                    HttpMethod.POST,
+                    requestEntity,
+                    String.class);
+            fail("This shouldn't be allowed!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            // This is the expected behaviour
+        }
     }
 
     private String userLogin(String user, String pass) {
@@ -95,7 +140,7 @@ public class TestUserService {
         System.out.println("Response status: " + status);
         assertEquals(HttpStatus.OK, status);
         System.out.println("Response body: " + loginResponse);
-        assertEquals("User Michail Smith logged in!", loginResponse);
+        assertTrue(loginResponse.endsWith("logged in!"));
         String cookieDelirium = response.getHeaders().get("Set-Cookie").get(0);
         assertNotNull(cookieDelirium);
         assertTrue(cookieDelirium.startsWith(CustomAuthenticationFilter.COOKIES_NAME));

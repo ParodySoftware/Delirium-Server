@@ -14,11 +14,8 @@ import org.springframework.security.web.session.SessionManagementFilter;
 @EnableWebMvcSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
-	private SessionRepository sessions;
+    @Autowired
+    CustomAuthenticationFilter customAuthenticationFilter;
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
@@ -27,6 +24,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 		http.anonymous().disable();
 
-		http.addFilterBefore(new CustomAuthenticationFilter(userRepository, sessions), SessionManagementFilter.class);
+		http.addFilterBefore(customAuthenticationFilter, SessionManagementFilter.class);
 	}
 }
