@@ -13,7 +13,11 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class AuthenticationStrategy {
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.ServletContextAware;
+
+@Service
+public class AuthenticationStrategy  implements ServletContextAware {
 
 	private final SessionRepository sessions;
 	private final UserRepository users;
@@ -22,7 +26,12 @@ public class AuthenticationStrategy {
 		this.sessions = sessions;
 		this.users = users;
 	}
-
+	
+	@Override
+	public void setServletContext(ServletContext servletContext) {
+		this.servletContext = servletContext;
+	}
+	
 	public Authentication authenticate(HttpServletRequest request, HttpServletResponse response) {
 
 		Cookie cookie = findCookie(request.getCookies());
