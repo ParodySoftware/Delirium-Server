@@ -221,12 +221,12 @@ public class DBUtils {
 			userRepository.save(user);
 		}
 
-		return user;
+		return userRepository.findOne(user.getId());
 	}
 
 	public Role createOrGetRole(String name, User... users) {
 
-		Role role = roleRepository.findOne(name);
+		Role role = roleRepository.getByName(name);
 
 		if (role == null) {
 			role = new Role(name);
@@ -241,7 +241,7 @@ public class DBUtils {
 			roleRepository.save(role);
 		}
 
-		return role;
+		return roleRepository.findOne(role.getId());
 	}
 
 	public void setDataSource(DataSource dataSource) {
